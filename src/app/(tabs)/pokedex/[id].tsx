@@ -3,8 +3,10 @@ import {
   getPokemonArtworkUrl,
   TYPE_COLORS,
 } from "@/src/lib/pokeapi";
+import { useFavorites } from "@/src/lib/favorites";
 import { colors } from "@/src/lib/theme";
 import type { PokemonDetails } from "@/src/types/pokemon";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -118,9 +120,11 @@ export default function Details() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const navigation = useNavigation();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [pokemon, setPokemon] = useState<PokemonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const favorited = isFavorite(id ?? "");
 
   const loadDetails = useCallback(() => {
     if (!id) {
@@ -174,9 +178,22 @@ export default function Details() {
     >
       {/* Hero Section */}
       <View style={[styles.hero, { backgroundColor: heroBg }]}>
-        <Text style={styles.heroId}>
-          #{String(pokemon.id).padStart(3, "0")}
-        </Text>
+        <View style={styles.heroTopRow}>
+          <Text style={styles.heroId}>
+            #{String(pokemon.id).padStart(3, "0")}
+          </Text>
+          <Pressable
+            style={styles.favoriteButton}
+            onPress={() => toggleFavorite(String(pokemon.id))}
+            hitSlop={12}
+          >
+            <Ionicons
+              name={favorited ? "heart" : "heart-outline"}
+              size={26}
+              color="#fff"
+            />
+          </Pressable>
+        </View>
         <Image
           source={{ uri: getPokemonArtworkUrl(String(pokemon.id)) }}
           style={styles.heroSprite}
@@ -298,11 +315,26 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 32,
     borderCurve: "continuous",
   },
+  heroTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 20,
+  },
   heroId: {
     fontSize: 14,
     fontWeight: "800",
     color: "rgba(255, 255, 255, 0.6)",
     letterSpacing: 1,
+  },
+  favoriteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroSprite: {
     width: 180,
