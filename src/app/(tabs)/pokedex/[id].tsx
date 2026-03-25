@@ -1,19 +1,29 @@
 import { useLocalSearchParams } from "expo-router";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function Details() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text style={{ fontSize: 24, fontWeight: "bold" }}>Pokémon Details</Text>
-      <Text style={{ marginTop: 8, color: "#666" }}>ID: {id}</Text>
+    <View style={styles.centered}>
+      <Text style={styles.title}>Pokémon Details</Text>
+      <Text style={styles.subtitle}>ID: {id}</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  subtitle: {
+    marginTop: 8,
+    color: "#666",
+  },
+});
