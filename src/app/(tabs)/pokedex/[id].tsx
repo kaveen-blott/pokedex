@@ -1,6 +1,6 @@
 import {
   fetchPokemonDetails,
-  getPokemonSpriteUrl,
+  getPokemonArtworkUrl,
   TYPE_COLORS,
 } from "@/src/lib/pokeapi";
 import { colors } from "@/src/lib/theme";
@@ -154,7 +154,7 @@ export default function Details() {
           #{String(pokemon.id).padStart(3, "0")}
         </Text>
         <Image
-          source={{ uri: getPokemonSpriteUrl(String(pokemon.id)) }}
+          source={{ uri: getPokemonArtworkUrl(String(pokemon.id)) }}
           style={styles.heroSprite}
           contentFit="contain"
           transition={300}
@@ -176,7 +176,7 @@ export default function Details() {
           <View style={styles.infoDivider} />
           <InfoCard label="Weight" value={formatWeight(pokemon.weight)} />
           <View style={styles.infoDivider} />
-          <InfoCard label="Base Exp" value={String(totalStats)} />
+          <InfoCard label="Base Exp" value={String(pokemon.base_experience)} />
         </View>
       </View>
 

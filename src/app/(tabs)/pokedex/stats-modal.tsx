@@ -1,8 +1,8 @@
 import {
   fetchEvolutionChain,
   fetchPokemonSpecies,
+  getPokemonArtworkUrl,
   getPokemonId,
-  getPokemonSpriteUrl,
 } from "@/src/lib/pokeapi";
 import { colors } from "@/src/lib/theme";
 import type { EvolutionChainLink, PokemonSpecies } from "@/src/types/pokemon";
@@ -143,10 +143,11 @@ function EvolutionRow({
                   evoStyles.evoCard,
                   isCurrent ? evoStyles.evoCardActive : null,
                 ]}
-                onPress={() => onPokemonPress(pokemon.id)}
+                disabled={isCurrent}
+                onPress={() => !isCurrent && onPokemonPress(pokemon.id)}
               >
                 <Image
-                  source={{ uri: getPokemonSpriteUrl(pokemon.id) }}
+                  source={{ uri: getPokemonArtworkUrl(pokemon.id) }}
                   style={evoStyles.evoSprite}
                   contentFit="contain"
                   cachePolicy="memory-disk"
@@ -189,7 +190,11 @@ export default function StatsModal() {
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      setError("Missing Pokémon id.");
+      return;
+    }
     setLoading(true);
     setError(null);
 

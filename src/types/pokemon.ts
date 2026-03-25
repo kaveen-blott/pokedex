@@ -40,6 +40,7 @@ export interface PokemonDetails {
   abilities: PokemonAbility[];
   height: number;
   weight: number;
+  base_experience: number;
 }
 
 export interface PokemonSpeciesFlavorText {
