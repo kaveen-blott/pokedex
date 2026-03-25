@@ -89,7 +89,7 @@ export default function Pokedex() {
       data={pokemon}
       keyExtractor={keyExtractor}
       numColumns={2}
-      contentContainerStyle={styles.list}
+      contentContainerStyle={{ padding: 12, paddingBottom: 64 }}
       renderItem={renderItem}
       onEndReached={loadMore}
       onEndReachedThreshold={0.5}
@@ -133,10 +133,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     fontWeight: "500",
-  },
-  list: {
-    padding: 12,
-    paddingBottom: 72,
   },
   footer: {
     paddingVertical: 24,
