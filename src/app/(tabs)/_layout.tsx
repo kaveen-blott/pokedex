@@ -1,3 +1,4 @@
+import { colors } from "@/src/lib/theme";
 import {
   Icon,
   Label,
@@ -7,7 +8,7 @@ import {
 
 export default function TabsLayout() {
   return (
-    <NativeTabs>
+    <NativeTabs tintColor={colors.red}>
       <NativeTabTrigger name="pokedex">
         <Icon
           sf={{ default: "list.bullet", selected: "list.bullet" }}
