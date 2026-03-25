@@ -20,3 +20,10 @@ export const colors = {
   tabActive: "#DC0A2D",
   tabInactive: "#9090A0",
 } as const;
+
+export const defaultScreenOptions = {
+  headerStyle: { backgroundColor: colors.red },
+  headerTintColor: "#fff",
+  headerTitleStyle: { fontWeight: "700" as const },
+  contentStyle: { backgroundColor: colors.backgroundLight },
+} as const;

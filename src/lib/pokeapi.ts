@@ -19,6 +19,9 @@ export async function fetchPokemonList(
   limit = PAGE_SIZE,
 ): Promise<Pokemon[]> {
   const res = await fetch(`${BASE_URL}/pokemon?offset=${offset}&limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`PokéAPI error: ${res.status} ${res.statusText}`);
+  }
   const data: PokemonListResponse = await res.json();
   return data.results;
 }

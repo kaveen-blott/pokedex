@@ -4,10 +4,10 @@ export interface Pokemon {
 }
 
 export interface PokemonSprites {
-  front_default: string;
-  front_shiny: string;
-  back_default: string;
-  back_shiny: string;
+  front_default: string | null;
+  front_shiny: string | null;
+  back_default: string | null;
+  back_shiny: string | null;
 }
 
 export interface PokemonDetails {

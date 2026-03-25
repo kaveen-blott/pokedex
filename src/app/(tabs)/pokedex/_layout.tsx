@@ -1,16 +1,9 @@
-import { colors } from "@/src/lib/theme";
+import { defaultScreenOptions } from "@/src/lib/theme";
 import { Stack } from "expo-router";
 
 export default function PokedexLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.red },
-        headerTintColor: "#fff",
-        headerTitleStyle: { fontWeight: "700" },
-        contentStyle: { backgroundColor: colors.backgroundLight },
-      }}
-    >
+    <Stack screenOptions={defaultScreenOptions}>
       <Stack.Screen name="index" options={{ title: "Pokédex" }} />
       <Stack.Screen name="[id]" options={{ title: "Details" }} />
     </Stack>

@@ -4,7 +4,13 @@ import { colors } from "@/src/lib/theme";
 import type { Pokemon } from "@/src/types/pokemon";
 import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 function renderItem({ item }: ListRenderItemInfo<Pokemon>) {
   return <PokemonCard name={item.name} url={item.url} />;
@@ -18,18 +24,25 @@ export default function Pokedex() {
   const [pokemon, setPokemon] = useState<Pokemon[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const hasMore = useRef(true);
 
-  useEffect(() => {
+  const loadInitial = useCallback(() => {
+    setLoading(true);
+    setError(null);
     fetchPokemonList(0)
       .then((results) => {
         setPokemon(results);
         hasMore.current =
           results.length >= PAGE_SIZE && results.length < TOTAL_POKEMON;
       })
-      .catch(console.error)
+      .catch(() => setError("Failed to load Pokémon. Please try again."))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadInitial();
+  }, [loadInitial]);
 
   const loadMore = useCallback(() => {
     if (loadingMore || !hasMore.current) return;
@@ -42,11 +55,12 @@ export default function Pokedex() {
     fetchPokemonList(offset, limit)
       .then((results) => {
         setPokemon((prev) => [...prev, ...results]);
+        setError(null);
         hasMore.current =
           results.length >= PAGE_SIZE &&
           offset + results.length < TOTAL_POKEMON;
       })
-      .catch(console.error)
+      .catch(() => setError("Failed to load more Pokémon."))
       .finally(() => setLoadingMore(false));
   }, [loadingMore, pokemon.length]);
 
@@ -55,6 +69,17 @@ export default function Pokedex() {
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.red} />
         <Text style={styles.loadingText}>Loading Pokédex…</Text>
+      </View>
+    );
+  }
+
+  if (error && pokemon.length === 0) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{error}</Text>
+        <Pressable style={styles.retryButton} onPress={loadInitial}>
+          <Text style={styles.retryText}>Retry</Text>
+        </Pressable>
       </View>
     );
   }
@@ -73,6 +98,13 @@ export default function Pokedex() {
           <View style={styles.footer}>
             <ActivityIndicator size="small" color={colors.red} />
             <Text style={styles.footerText}>Loading more Pokémon…</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.footer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable style={styles.retryButton} onPress={loadMore}>
+              <Text style={styles.retryText}>Retry</Text>
+            </Pressable>
           </View>
         ) : !hasMore.current ? (
           <View style={styles.footerDone}>
@@ -130,5 +162,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     fontWeight: "500",
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.red,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: colors.red,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderCurve: "continuous",
+  },
+  retryText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
