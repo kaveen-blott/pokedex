@@ -28,8 +28,17 @@ const STAT_LABELS: Record<string, string> = {
 
 const STAT_MAX = 255;
 
-function capitalize(str: string): string {
-  return str
+const POKEMON_NAME_MAP: Record<string, string> = {
+  "nidoran-f": "Nidoran♀",
+  "nidoran-m": "Nidoran♂",
+  "mr-mime": "Mr. Mime",
+  "deoxys-normal": "Deoxys",
+  farfetchd: "Farfetch'd",
+};
+
+function formatPokemonName(name: string): string {
+  if (POKEMON_NAME_MAP[name]) return POKEMON_NAME_MAP[name];
+  return name
     .split("-")
     .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
     .join(" ");
@@ -75,12 +84,23 @@ function StatBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+const DARK_TEXT_TYPES = new Set([
+  "electric",
+  "ice",
+  "normal",
+  "fairy",
+  "ground",
+]);
+
 function TypeBadge({ name }: { name: string }) {
   const bgColor = TYPE_COLORS[name] ?? colors.textMuted;
+  const textColor = DARK_TEXT_TYPES.has(name) ? "#2E2E2E" : "#FFFFFF";
 
   return (
     <View style={[typeStyles.badge, { backgroundColor: bgColor }]}>
-      <Text style={typeStyles.text}>{capitalize(name)}</Text>
+      <Text style={[typeStyles.text, { color: textColor }]}>
+        {formatPokemonName(name)}
+      </Text>
     </View>
   );
 }
@@ -103,13 +123,17 @@ export default function Details() {
   const [error, setError] = useState<string | null>(null);
 
   const loadDetails = useCallback(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      setError("Invalid Pokémon id.");
+      return;
+    }
     setLoading(true);
     setError(null);
     fetchPokemonDetails(id)
       .then((data) => {
         setPokemon(data);
-        navigation.setOptions({ title: capitalize(data.name) });
+        navigation.setOptions({ title: formatPokemonName(data.name) });
       })
       .catch(() => setError("Failed to load Pokémon details."))
       .finally(() => setLoading(false));
@@ -160,7 +184,7 @@ export default function Details() {
           transition={300}
           cachePolicy="memory-disk"
         />
-        <Text style={styles.heroName}>{capitalize(pokemon.name)}</Text>
+        <Text style={styles.heroName}>{formatPokemonName(pokemon.name)}</Text>
         <View style={styles.typesRow}>
           {pokemon.types.map((t) => (
             <TypeBadge key={t.type.name} name={t.type.name} />
@@ -187,7 +211,7 @@ export default function Details() {
           {pokemon.abilities.map((a) => (
             <View key={a.ability.name} style={styles.abilityChip}>
               <Text style={styles.abilityText}>
-                {capitalize(a.ability.name)}
+                {formatPokemonName(a.ability.name)}
               </Text>
               {a.is_hidden ? (
                 <Text style={styles.hiddenLabel}>Hidden</Text>

@@ -19,8 +19,17 @@ import {
   View,
 } from "react-native";
 
-function capitalize(str: string): string {
-  return str
+const POKEMON_NAME_MAP: Record<string, string> = {
+  "nidoran-f": "Nidoran♀",
+  "nidoran-m": "Nidoran♂",
+  "mr-mime": "Mr. Mime",
+  "deoxys-normal": "Deoxys",
+  farfetchd: "Farfetch'd",
+};
+
+function formatPokemonName(name: string): string {
+  if (POKEMON_NAME_MAP[name]) return POKEMON_NAME_MAP[name];
+  return name
     .split("-")
     .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
     .join(" ");
@@ -160,7 +169,7 @@ function EvolutionRow({
                   ]}
                   numberOfLines={1}
                 >
-                  {capitalize(pokemon.name)}
+                  {formatPokemonName(pokemon.name)}
                 </Text>
               </Pressable>
             );
@@ -246,8 +255,6 @@ export default function StatsModal() {
   const genus =
     species.genera.find((g) => g.language.name === "en")?.genus ?? "";
 
-  const capturePercent = ((species.capture_rate / 255) * 100).toFixed(1);
-
   return (
     <ScrollView
       style={styles.scroll}
@@ -255,7 +262,7 @@ export default function StatsModal() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{capitalize(species.name)}</Text>
+        <Text style={styles.title}>{formatPokemonName(species.name)}</Text>
         {genus ? <Text style={styles.genus}>{genus}</Text> : null}
         {species.is_legendary || species.is_mythical ? (
           <View style={styles.badgeRow}>
@@ -310,18 +317,17 @@ export default function StatsModal() {
         <View style={styles.pillsGrid}>
           <InfoPill
             label="Growth"
-            value={capitalize(species.growth_rate.name)}
+            value={formatPokemonName(species.growth_rate.name)}
           />
           <InfoPill
             label="Habitat"
             value={
-              species.habitat ? capitalize(species.habitat.name) : "Unknown"
+              species.habitat ? formatPokemonName(species.habitat.name) : "Unknown"
             }
           />
-          <InfoPill label="Catch %" value={`${capturePercent}%`} />
           <InfoPill
             label="Egg Groups"
-            value={species.egg_groups.map((g) => capitalize(g.name)).join(", ")}
+            value={species.egg_groups.map((g) => formatPokemonName(g.name)).join(", ")}
           />
         </View>
       </View>
