@@ -11,8 +11,14 @@ export function getPokemonSpriteUrl(id: string): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 }
 
-export async function fetchPokemonList(limit = 151): Promise<Pokemon[]> {
-  const res = await fetch(`${BASE_URL}/pokemon?limit=${limit}`);
+export const PAGE_SIZE = 30;
+export const TOTAL_POKEMON = 151;
+
+export async function fetchPokemonList(
+  offset = 0,
+  limit = PAGE_SIZE,
+): Promise<Pokemon[]> {
+  const res = await fetch(`${BASE_URL}/pokemon?offset=${offset}&limit=${limit}`);
   const data: PokemonListResponse = await res.json();
   return data.results;
 }

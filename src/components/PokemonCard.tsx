@@ -1,7 +1,8 @@
 import { getPokemonId, getPokemonSpriteUrl } from "@/src/lib/pokeapi";
+import { colors } from "@/src/lib/theme";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -13,16 +14,22 @@ export function PokemonCard({ name, url }: { name: string; url: string }) {
   return (
     <Link href={{ pathname: "/(tabs)/pokedex/[id]", params: { id } }} asChild>
       <Pressable style={styles.card}>
-        <Text style={styles.id}>#{id.padStart(3, "0")}</Text>
-        <Image
-          source={{ uri: getPokemonSpriteUrl(id) }}
-          style={styles.sprite}
-          contentFit="contain"
-          transition={200}
-          cachePolicy="memory-disk"
-          recyclingKey={id}
-        />
-        <Text style={styles.name}>{capitalize(name)}</Text>
+        <View style={styles.idBadge}>
+          <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
+        </View>
+        <View style={styles.spriteContainer}>
+          <Image
+            source={{ uri: getPokemonSpriteUrl(id) }}
+            style={styles.sprite}
+            contentFit="contain"
+            transition={200}
+            cachePolicy="memory-disk"
+            recyclingKey={id}
+          />
+        </View>
+        <View style={styles.nameContainer}>
+          <Text style={styles.name}>{capitalize(name)}</Text>
+        </View>
       </Pressable>
     </Link>
   );
@@ -30,30 +37,43 @@ export function PokemonCard({ name, url }: { name: string; url: string }) {
 
 const styles = StyleSheet.create({
   card: {
-    alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 16,
     margin: 6,
-    gap: 4,
-    backgroundColor: "#fff",
+    backgroundColor: colors.backgroundCard,
     borderRadius: 16,
     borderCurve: "continuous",
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+    boxShadow: `0 2px 12px ${colors.shadow}`,
+    overflow: "hidden",
+  },
+  idBadge: {
+    alignSelf: "flex-end",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginTop: 8,
+    marginRight: 8,
+  },
+  idText: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  spriteContainer: {
+    alignItems: "center",
+    paddingVertical: 4,
   },
   sprite: {
-    width: 72,
-    height: 72,
+    width: 80,
+    height: 80,
   },
-  id: {
-    fontSize: 12,
-    color: "#aaa",
-    fontWeight: "700",
-    alignSelf: "flex-end",
-    marginRight: 12,
+  nameContainer: {
+    backgroundColor: colors.red,
+    paddingVertical: 10,
+    alignItems: "center",
   },
   name: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#fff",
+    letterSpacing: 0.3,
   },
 });
