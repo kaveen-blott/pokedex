@@ -1,104 +1,151 @@
+import { PokemonCard } from "@/src/components/PokemonCard";
 import { useFavorites } from "@/src/lib/favorites";
-import { getPokemonArtworkUrl } from "@/src/lib/pokeapi";
+import { fetchPokemonList, TOTAL_POKEMON } from "@/src/lib/pokeapi";
+import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
-import { Image } from "expo-image";
-import { Link } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function FavoriteItem({ id }: { id: string }) {
-  const name = `#${id.padStart(3, "0")}`;
-
-  return (
-    <Link href={{ pathname: "/(tabs)/pokedex/[id]", params: { id } }} asChild>
-      <Pressable style={styles.item}>
-        <Image
-          source={{ uri: getPokemonArtworkUrl(id) }}
-          style={styles.sprite}
-          contentFit="contain"
-          cachePolicy="memory-disk"
-          transition={200}
-        />
-        <Text style={styles.itemId}>{name}</Text>
-      </Pressable>
-    </Link>
-  );
-}
+type NameMap = Record<string, string>;
 
 export default function Favorites() {
-  const { favorites } = useFavorites();
+  const { favorites, toggleFavorite } = useFavorites();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [nameMap, setNameMap] = useState<NameMap>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPokemonList(0, TOTAL_POKEMON)
+      .then((results) => {
+        const map: NameMap = {};
+        for (const p of results) {
+          const segments = p.url.replace(/\/$/, "").split("/");
+          map[segments[segments.length - 1]] = p.name;
+        }
+        setNameMap(map);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const sorted = useMemo(
     () => [...favorites].sort((a, b) => Number(a) - Number(b)),
     [favorites],
   );
 
+  const handleLongPress = useCallback(
+    (id: string, name: string) => {
+      Alert.alert(
+        "Remove Favorite",
+        `Remove ${formatPokemonName(name)} from favorites?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Remove",
+            style: "destructive",
+            onPress: () => toggleFavorite(id),
+          },
+        ],
+      );
+    },
+    [toggleFavorite],
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.red} />
+      </View>
+    );
+  }
+
   if (sorted.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyEmoji}>{"<3"}</Text>
+        <Ionicons name="heart-outline" size={64} color={colors.textMuted} />
         <Text style={styles.emptyTitle}>No Favorites Yet</Text>
         <Text style={styles.emptySubtitle}>
-          Tap the heart on a Pokémon to save it here
+          Tap the heart on a Pokémon&apos;s detail page to save it here
         </Text>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.grid}
-    >
-      {sorted.map((id) => (
-        <FavoriteItem key={id} id={id} />
-      ))}
-    </ScrollView>
+    <FlatList
+      data={sorted}
+      keyExtractor={(id) => id}
+      numColumns={2}
+      style={styles.list}
+      contentContainerStyle={[
+        styles.grid,
+        { paddingBottom: insets.bottom + 16 },
+      ]}
+      renderItem={({ item: id }) => (
+        <View style={styles.cardWrapper}>
+          <PokemonCard
+            id={id}
+            name={nameMap[id] ?? `Pokemon ${id}`}
+            onLongPress={() => handleLongPress(id, nameMap[id] ?? id)}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/favorites/[id]",
+                params: { id },
+              })
+            }
+          />
+        </View>
+      )}
+      ListFooterComponent={
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            {sorted.length} {sorted.length === 1 ? "favorite" : "favorites"}
+          </Text>
+          <Text style={styles.footerHint}>Long press a card to remove</Text>
+        </View>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
+  list: {
     flex: 1,
     backgroundColor: colors.backgroundLight,
   },
   grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    padding: 12,
-    paddingBottom: 80,
+    padding: 6,
   },
-  item: {
-    width: "33.333%",
+  cardWrapper: {
+    flex: 1,
+    maxWidth: "50%",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-  },
-  sprite: {
-    width: 72,
-    height: 72,
-  },
-  itemId: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.textSecondary,
-    letterSpacing: 0.5,
+    backgroundColor: colors.backgroundLight,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.backgroundLight,
-    gap: 8,
+    gap: 12,
     padding: 32,
   },
-  emptyEmoji: {
-    fontSize: 40,
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
     color: colors.textPrimary,
   },
@@ -107,5 +154,19 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 20,
+  },
+  footer: {
+    paddingVertical: 24,
+    alignItems: "center",
+    gap: 4,
+  },
+  footerText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textSecondary,
+  },
+  footerHint: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
 });

@@ -7,39 +7,56 @@ import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-export function PokemonCard({ name, url }: { name: string; url: string }) {
-  const id = getPokemonId(url);
+type PokemonCardProps = {
+  name: string;
+  onLongPress?: () => void;
+  onPress?: () => void;
+} & ({ url: string; id?: never } | { id: string; url?: never });
+
+export function PokemonCard(props: PokemonCardProps) {
+  const id = props.id ?? getPokemonId(props.url!);
+  const { name, onLongPress, onPress } = props;
   const { isFavorite } = useFavorites();
   const favorited = isFavorite(id);
 
+  const cardContent = (
+    <Pressable
+      style={styles.card}
+      onLongPress={onLongPress}
+      onPress={onPress}
+    >
+      <View style={styles.idBadge}>
+        <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
+      </View>
+      <View style={styles.spriteContainer}>
+        <Image
+          source={{ uri: getPokemonSpriteUrl(id) }}
+          style={styles.sprite}
+          contentFit="contain"
+          transition={200}
+          cachePolicy="memory-disk"
+          recyclingKey={id}
+        />
+      </View>
+      <View
+        style={[
+          styles.nameContainer,
+          favorited && styles.nameContainerFavorite,
+        ]}
+      >
+        {favorited ? <Ionicons name="star" size={14} color="#fff" /> : null}
+        <Text style={styles.name}>{formatPokemonName(name)}</Text>
+      </View>
+    </Pressable>
+  );
+
+  if (onPress) {
+    return cardContent;
+  }
+
   return (
     <Link href={{ pathname: "/(tabs)/pokedex/[id]", params: { id } }} asChild>
-      <Pressable style={styles.card}>
-        <View style={styles.idBadge}>
-          {favorited ? (
-            <Ionicons name="heart" size={14} color={colors.red} />
-          ) : null}
-          <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
-        </View>
-        <View style={styles.spriteContainer}>
-          <Image
-            source={{ uri: getPokemonSpriteUrl(id) }}
-            style={styles.sprite}
-            contentFit="contain"
-            transition={200}
-            cachePolicy="memory-disk"
-            recyclingKey={id}
-          />
-        </View>
-        <View
-          style={[
-            styles.nameContainer,
-            favorited && styles.nameContainerFavorite,
-          ]}
-        >
-          <Text style={styles.name}>{formatPokemonName(name)}</Text>
-        </View>
-      </Pressable>
+      {cardContent}
     </Link>
   );
 }
@@ -78,12 +95,15 @@ const styles = StyleSheet.create({
     height: 80,
   },
   nameContainer: {
+    flexDirection: "row",
     backgroundColor: colors.red,
     paddingVertical: 10,
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
   nameContainerFavorite: {
-    backgroundColor: colors.redDark,
+    backgroundColor: colors.favorite,
   },
   name: {
     fontSize: 13,

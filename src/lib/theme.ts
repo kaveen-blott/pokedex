@@ -1,8 +1,6 @@
 export const colors = {
   // Primary Pokémon red
   red: "#DC0A2D",
-  redDark: "#A00020",
-
   // Backgrounds
   backgroundLight: "#F5F5F5",
   backgroundCard: "#FFFFFF",
@@ -11,6 +9,9 @@ export const colors = {
   textPrimary: "#1A1A2E",
   textSecondary: "#6B6B80",
   textMuted: "#A0A0B0",
+
+  // Favorites
+  favorite: "#F5A623",
 
   // Accents
   border: "#E8E8EF",

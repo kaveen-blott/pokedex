@@ -28,7 +28,9 @@ export async function fetchPokemonList(
   offset = 0,
   limit = PAGE_SIZE,
 ): Promise<Pokemon[]> {
-  const res = await fetch(`${BASE_URL}/pokemon?offset=${offset}&limit=${limit}`);
+  const res = await fetch(
+    `${BASE_URL}/pokemon?offset=${offset}&limit=${limit}`,
+  );
   if (!res.ok) {
     throw new Error(`PokéAPI error: ${res.status} ${res.statusText}`);
   }
@@ -36,9 +38,7 @@ export async function fetchPokemonList(
   return data.results;
 }
 
-export async function fetchPokemonDetails(
-  id: string,
-): Promise<PokemonDetails> {
+export async function fetchPokemonDetails(id: string): Promise<PokemonDetails> {
   const res = await fetch(`${BASE_URL}/pokemon/${id}`);
   if (!res.ok) {
     throw new Error(`PokéAPI error: ${res.status} ${res.statusText}`);
@@ -46,9 +46,7 @@ export async function fetchPokemonDetails(
   return res.json();
 }
 
-export async function fetchPokemonSpecies(
-  id: string,
-): Promise<PokemonSpecies> {
+export async function fetchPokemonSpecies(id: string): Promise<PokemonSpecies> {
   const res = await fetch(`${BASE_URL}/pokemon-species/${id}`);
   if (!res.ok) {
     throw new Error(`PokéAPI error: ${res.status} ${res.statusText}`);
