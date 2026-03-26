@@ -10,7 +10,7 @@ export default function FavoriteDetailModal() {
     (pokemonId: string) => {
       router.push({
         pathname: "/stats-modal",
-        params: { id: pokemonId },
+        params: { id: pokemonId, origin: "favorites" },
       });
     },
     [router],

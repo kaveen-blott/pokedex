@@ -20,7 +20,10 @@ import {
 } from "react-native";
 
 export default function StatsModal() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, origin } = useLocalSearchParams<{
+    id: string;
+    origin: "pokedex" | "favorites";
+  }>();
   const router = useRouter();
 
   const [species, setSpecies] = useState<PokemonSpecies | null>(null);
@@ -183,10 +186,14 @@ export default function StatsModal() {
               stages={evoStages}
               currentId={id ?? ""}
               onPokemonPress={(evoId) => {
-                router.dismiss();
+                const detailPath =
+                  origin === "favorites"
+                    ? "/(tabs)/favorites/[id]"
+                    : "/(tabs)/pokedex/[id]";
+                if (origin === "pokedex") router.dismiss();
                 setTimeout(() => {
                   router.navigate({
-                    pathname: "/(tabs)/pokedex/[id]",
+                    pathname: detailPath,
                     params: { id: evoId },
                   });
                 }, 100);
