@@ -1,5 +1,13 @@
 import { colors } from "@/src/lib/theme";
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 
 const STAT_MAX = 255;
 
@@ -11,21 +19,44 @@ function getStatColor(value: number): string {
   return "#4CAF50";
 }
 
-export function StatBar({ label, value }: { label: string; value: number }) {
+export function StatBar({
+  label,
+  value,
+  index = 0,
+}: {
+  label: string;
+  value: number;
+  index?: number;
+}) {
   const percentage = Math.min((value / STAT_MAX) * 100, 100);
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withDelay(
+      500 + index * 80,
+      withTiming(1, {
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+      }),
+    );
+  }, [progress, index]);
+
+  const barStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: progress.value }],
+  }));
+
+  const color = getStatColor(value);
 
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>{value}</Text>
       <View style={styles.barBackground}>
-        <View
+        <Animated.View
           style={[
             styles.barFill,
-            {
-              width: `${percentage}%`,
-              backgroundColor: getStatColor(value),
-            },
+            { width: `${percentage}%`, backgroundColor: color },
+            barStyle,
           ]}
         />
       </View>

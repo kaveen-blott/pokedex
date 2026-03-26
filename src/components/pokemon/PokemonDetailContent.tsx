@@ -10,11 +10,21 @@ import type { PokemonDetails } from "@/src/types/pokemon";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  Extrapolation,
+  FadeInDown,
+  FadeInUp,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  ZoomIn,
+} from "react-native-reanimated";
 
 import { DetailsSkeleton } from "./DetailsSkeleton";
 import { InfoCard } from "./InfoCard";
-import { StatBar, STAT_LABELS } from "./StatBar";
+import { STAT_LABELS, StatBar } from "./StatBar";
 import { TypeBadge } from "./TypeBadge";
 
 function formatHeight(dm: number): string {
@@ -66,6 +76,67 @@ export function PokemonDetailContent({
     loadDetails();
   }, [loadDetails]);
 
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const heroBackgroundStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      scrollY.value,
+      [-100, 0],
+      [1.3, 1],
+      Extrapolation.CLAMP,
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [-100, 0, 200],
+      [-50, 0, 0],
+      Extrapolation.CLAMP,
+    );
+    return { transform: [{ scale }, { translateY }] };
+  });
+
+  const heroImageStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollY.value,
+      [0, 200],
+      [0, 60],
+      Extrapolation.CLAMP,
+    );
+    const scale = interpolate(
+      scrollY.value,
+      [-80, 0, 200],
+      [1.15, 1, 0.85],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      scrollY.value,
+      [0, 180],
+      [1, 0],
+      Extrapolation.CLAMP,
+    );
+    return { transform: [{ translateY }, { scale }], opacity };
+  });
+
+  const heroTextStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollY.value,
+      [0, 150],
+      [0, 30],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      scrollY.value,
+      [0, 120],
+      [1, 0],
+      Extrapolation.CLAMP,
+    );
+    return { transform: [{ translateY }], opacity };
+  });
+
   if (loading) {
     return <DetailsSkeleton />;
   }
@@ -86,12 +157,16 @@ export function PokemonDetailContent({
   const totalStats = pokemon.stats.reduce((sum, s) => sum + s.base_stat, 0);
 
   return (
-    <ScrollView
+    <Animated.ScrollView
       style={styles.scroll}
-      contentContainerStyle={{ paddingBottom: 100 }}
+      contentContainerStyle={{ paddingBottom: 0 }}
+      onScroll={scrollHandler}
+      scrollEventThrottle={16}
     >
       {/* Hero Section */}
-      <View style={[styles.hero, { backgroundColor: heroBg }]}>
+      <Animated.View
+        style={[styles.hero, { backgroundColor: heroBg }, heroBackgroundStyle]}
+      >
         <View style={styles.heroTopRow}>
           <Text style={styles.heroId}>
             #{String(pokemon.id).padStart(3, "0")}
@@ -119,83 +194,112 @@ export function PokemonDetailContent({
             />
           </Pressable>
         </View>
-        <Image
-          source={{ uri: getPokemonArtworkUrl(String(pokemon.id)) }}
-          style={styles.heroSprite}
-          contentFit="contain"
-          transition={300}
-          cachePolicy="memory-disk"
-        />
-        <Text style={styles.heroName}>{formatPokemonName(pokemon.name)}</Text>
-        <View style={styles.typesRow}>
+        <Animated.View
+          entering={ZoomIn.delay(100).duration(500)}
+          style={heroImageStyle}
+        >
+          <Image
+            source={{ uri: getPokemonArtworkUrl(String(pokemon.id)) }}
+            style={styles.heroSprite}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
+        </Animated.View>
+        <Animated.Text
+          entering={FadeInUp.delay(250).duration(400)}
+          style={[styles.heroName, heroTextStyle]}
+        >
+          {formatPokemonName(pokemon.name)}
+        </Animated.Text>
+        <Animated.View
+          entering={FadeInUp.delay(350).duration(350)}
+          style={[styles.typesRow, heroTextStyle]}
+        >
           {pokemon.types.map((t) => (
             <TypeBadge key={t.type.name} name={t.type.name} />
           ))}
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
 
-      {/* About Section */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: heroBg }]}>About</Text>
-        <View style={styles.infoRow}>
-          <InfoCard label="Height" value={formatHeight(pokemon.height)} />
-          <View style={styles.infoDivider} />
-          <InfoCard label="Weight" value={formatWeight(pokemon.weight)} />
-          <View style={styles.infoDivider} />
-          <InfoCard
-            label="Base Exp"
-            value={String(pokemon.base_experience)}
-          />
-        </View>
-      </View>
-
-      {/* Abilities Section */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: heroBg }]}>Abilities</Text>
-        <View style={styles.abilitiesRow}>
-          {pokemon.abilities.map((a) => (
-            <View key={a.ability.name} style={styles.abilityChip}>
-              <Text style={styles.abilityText}>
-                {formatPokemonName(a.ability.name)}
-              </Text>
-              {a.is_hidden ? (
-                <Text style={styles.hiddenLabel}>Hidden</Text>
-              ) : null}
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* Base Stats Section */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: heroBg }]}>
-          Base Stats
-        </Text>
-        <View style={styles.statsContainer}>
-          {pokemon.stats.map((s) => (
-            <StatBar
-              key={s.stat.name}
-              label={STAT_LABELS[s.stat.name] ?? s.stat.name}
-              value={s.base_stat}
-            />
-          ))}
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>TOT</Text>
-            <Text style={styles.totalValue}>{totalStats}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* More Stats Button */}
-      {onExploreMoreStats ? (
-        <Pressable
-          style={[styles.moreStatsButton, { backgroundColor: heroBg }]}
-          onPress={() => onExploreMoreStats(id)}
+      {/* Content Card */}
+      <View style={styles.contentCard}>
+        {/* About Section */}
+        <Animated.View
+          entering={FadeInDown.duration(400)}
+          style={styles.section}
         >
-          <Text style={styles.moreStatsText}>Explore More Stats</Text>
-        </Pressable>
-      ) : null}
-    </ScrollView>
+          <Text style={[styles.sectionTitle, { color: heroBg }]}>About</Text>
+          <View style={styles.infoRow}>
+            <InfoCard label="Height" value={formatHeight(pokemon.height)} />
+            <View style={styles.infoDivider} />
+            <InfoCard label="Weight" value={formatWeight(pokemon.weight)} />
+            <View style={styles.infoDivider} />
+            <InfoCard
+              label="Base Exp"
+              value={String(pokemon.base_experience)}
+            />
+          </View>
+        </Animated.View>
+
+        {/* Abilities Section */}
+        <Animated.View
+          entering={FadeInDown.delay(200).duration(400)}
+          style={styles.section}
+        >
+          <Text style={[styles.sectionTitle, { color: heroBg }]}>
+            Abilities
+          </Text>
+          <View style={styles.abilitiesRow}>
+            {pokemon.abilities.map((a) => (
+              <View key={a.ability.name} style={styles.abilityChip}>
+                <Text style={styles.abilityText}>
+                  {formatPokemonName(a.ability.name)}
+                </Text>
+                {a.is_hidden ? (
+                  <Text style={styles.hiddenLabel}>Hidden</Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        </Animated.View>
+
+        {/* Base Stats Section */}
+        <Animated.View
+          entering={FadeInDown.delay(350).duration(400)}
+          style={styles.section}
+        >
+          <Text style={[styles.sectionTitle, { color: heroBg }]}>
+            Base Stats
+          </Text>
+          <View style={styles.statsContainer}>
+            {pokemon.stats.map((s, i) => (
+              <StatBar
+                key={s.stat.name}
+                label={STAT_LABELS[s.stat.name] ?? s.stat.name}
+                value={s.base_stat}
+                index={i}
+              />
+            ))}
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>TOT</Text>
+              <Text style={styles.totalValue}>{totalStats}</Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* More Stats Button */}
+        {onExploreMoreStats ? (
+          <Animated.View entering={FadeInDown.delay(500).duration(400)}>
+            <Pressable
+              style={[styles.moreStatsButton, { backgroundColor: heroBg }]}
+              onPress={() => onExploreMoreStats(id)}
+            >
+              <Text style={styles.moreStatsText}>Explore More Stats</Text>
+            </Pressable>
+          </Animated.View>
+        ) : null}
+      </View>
+    </Animated.ScrollView>
   );
 }
 
@@ -232,10 +336,16 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     paddingTop: 12,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: 48,
+  },
+  contentCard: {
+    marginTop: -24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     borderCurve: "continuous",
+    backgroundColor: colors.backgroundLight,
+    paddingTop: 4,
+    paddingBottom: 100,
   },
   heroTopRow: {
     flexDirection: "row",
