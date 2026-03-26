@@ -1,3 +1,4 @@
+import { Skeleton } from "@/src/components/Skeleton";
 import { useFavorites } from "@/src/lib/favorites";
 import {
   fetchPokemonDetails,
@@ -11,14 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 const STAT_LABELS: Record<string, string> = {
   hp: "HP",
@@ -140,10 +134,86 @@ export default function Details() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.red} />
-        <Text style={styles.loadingText}>Loading details…</Text>
-      </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* Hero skeleton */}
+        <View style={[styles.hero, { backgroundColor: colors.border }]}>
+          <View style={styles.heroTopRow}>
+            <Skeleton width={60} height={16} borderRadius={4} />
+            <Skeleton width={40} height={40} borderRadius={20} />
+          </View>
+          <Skeleton
+            width={180}
+            height={180}
+            borderRadius={90}
+            style={{ alignSelf: "center", marginVertical: 8 }}
+          />
+          <Skeleton
+            width={140}
+            height={28}
+            borderRadius={8}
+            style={{ alignSelf: "center", marginTop: 4 }}
+          />
+          <View style={[styles.typesRow, { alignSelf: "center" }]}>
+            <Skeleton width={80} height={28} borderRadius={20} />
+            <Skeleton width={80} height={28} borderRadius={20} />
+          </View>
+        </View>
+
+        {/* About skeleton */}
+        <View style={styles.section}>
+          <Skeleton width={80} height={20} borderRadius={6} />
+          <View style={[styles.infoRow, { marginTop: 12 }]}>
+            <View style={skeletonCardStyles.infoItem}>
+              <Skeleton width={50} height={18} borderRadius={4} />
+              <Skeleton width={40} height={12} borderRadius={4} />
+            </View>
+            <View style={styles.infoDivider} />
+            <View style={skeletonCardStyles.infoItem}>
+              <Skeleton width={50} height={18} borderRadius={4} />
+              <Skeleton width={40} height={12} borderRadius={4} />
+            </View>
+            <View style={styles.infoDivider} />
+            <View style={skeletonCardStyles.infoItem}>
+              <Skeleton width={50} height={18} borderRadius={4} />
+              <Skeleton width={40} height={12} borderRadius={4} />
+            </View>
+          </View>
+        </View>
+
+        {/* Abilities skeleton */}
+        <View style={styles.section}>
+          <Skeleton width={100} height={20} borderRadius={6} />
+          <View style={[styles.abilitiesRow, { marginTop: 12 }]}>
+            <Skeleton width={100} height={38} borderRadius={12} />
+            <Skeleton width={120} height={38} borderRadius={12} />
+          </View>
+        </View>
+
+        {/* Stats skeleton */}
+        <View style={styles.section}>
+          <Skeleton width={110} height={20} borderRadius={6} />
+          <View style={[styles.statsContainer, { marginTop: 12 }]}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <View key={i} style={skeletonCardStyles.statRow}>
+                <Skeleton width={36} height={12} borderRadius={4} />
+                <Skeleton width={32} height={12} borderRadius={4} />
+                <Skeleton width="60%" height={6} borderRadius={3} />
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Button skeleton */}
+        <Skeleton
+          width="auto"
+          height={48}
+          borderRadius={16}
+          style={{ marginTop: 20, marginHorizontal: 20 }}
+        />
+      </ScrollView>
     );
   }
 
@@ -285,11 +355,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.backgroundLight,
     gap: 12,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: "500",
   },
   errorText: {
     fontSize: 14,
@@ -513,5 +578,18 @@ const infoStyles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
     color: colors.textMuted,
+  },
+});
+
+const skeletonCardStyles = StyleSheet.create({
+  infoItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 6,
+  },
+  statRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });
