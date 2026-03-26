@@ -7,14 +7,20 @@ import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-export function PokemonCard({ name, url }: { name: string; url: string }) {
-  const id = getPokemonId(url);
+type PokemonCardProps = {
+  name: string;
+  onLongPress?: () => void;
+} & ({ url: string; id?: never } | { id: string; url?: never });
+
+export function PokemonCard(props: PokemonCardProps) {
+  const id = props.id ?? getPokemonId(props.url!);
+  const { name, onLongPress } = props;
   const { isFavorite } = useFavorites();
   const favorited = isFavorite(id);
 
   return (
     <Link href={{ pathname: "/(tabs)/pokedex/[id]", params: { id } }} asChild>
-      <Pressable style={styles.card}>
+      <Pressable style={styles.card} onLongPress={onLongPress}>
         <View style={styles.idBadge}>
           <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
         </View>
