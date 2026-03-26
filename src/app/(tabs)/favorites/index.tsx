@@ -14,12 +14,14 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type NameMap = Record<string, string>;
 
 export default function Favorites() {
   const { favorites, toggleFavorite } = useFavorites();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [nameMap, setNameMap] = useState<NameMap>({});
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +75,7 @@ export default function Favorites() {
         <Ionicons name="heart-outline" size={64} color={colors.textMuted} />
         <Text style={styles.emptyTitle}>No Favorites Yet</Text>
         <Text style={styles.emptySubtitle}>
-          Tap the heart on a Pokémon's detail page to save it here
+          Tap the heart on a Pokémon&apos;s detail page to save it here
         </Text>
       </View>
     );
@@ -85,7 +87,10 @@ export default function Favorites() {
       keyExtractor={(id) => id}
       numColumns={2}
       style={styles.list}
-      contentContainerStyle={styles.grid}
+      contentContainerStyle={[
+        styles.grid,
+        { paddingBottom: insets.bottom + 16 },
+      ]}
       renderItem={({ item: id }) => (
         <View style={styles.cardWrapper}>
           <PokemonCard
@@ -120,7 +125,6 @@ const styles = StyleSheet.create({
   },
   grid: {
     padding: 6,
-    paddingBottom: 80,
   },
   cardWrapper: {
     flex: 1,

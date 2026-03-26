@@ -11,13 +11,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function StatsModal() {
   const { id, origin } = useLocalSearchParams<{
@@ -25,6 +25,7 @@ export default function StatsModal() {
     origin: "pokedex" | "favorites";
   }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [species, setSpecies] = useState<PokemonSpecies | null>(null);
   const [evoStages, setEvoStages] = useState<EvoStage[][] | null>(null);
@@ -91,7 +92,10 @@ export default function StatsModal() {
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: insets.bottom + 24 },
+      ]}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -211,9 +215,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.backgroundLight,
   },
-  scrollContent: {
-    paddingBottom: Platform.OS === "ios" ? 60 : 124,
-  },
+  scrollContent: {},
   centered: {
     flex: 1,
     justifyContent: "center",

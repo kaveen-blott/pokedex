@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function renderItem({ item }: ListRenderItemInfo<Pokemon>) {
   return <PokemonCard name={item.name} url={item.url} />;
@@ -24,6 +25,7 @@ function keyExtractor(item: Pokemon) {
 }
 
 export default function Pokedex() {
+  const insets = useSafeAreaInsets();
   const [allPokemon, setAllPokemon] = useState<Pokemon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +62,6 @@ export default function Pokedex() {
 
   const hasMore = visibleCount < filtered.length;
 
-  // Reset visible count when debounced search changes
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [debouncedSearch]);
@@ -142,7 +143,10 @@ export default function Pokedex() {
         data={displayedPokemon}
         keyExtractor={keyExtractor}
         numColumns={2}
-        contentContainerStyle={{ padding: 12, paddingBottom: 64 }}
+        contentContainerStyle={{
+          padding: 12,
+          paddingBottom: insets.bottom + 16,
+        }}
         renderItem={renderItem}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}

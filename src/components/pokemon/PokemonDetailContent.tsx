@@ -21,6 +21,7 @@ import Animated, {
   useSharedValue,
   ZoomIn,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DetailsSkeleton } from "./DetailsSkeleton";
 import { InfoCard } from "./InfoCard";
@@ -49,6 +50,7 @@ export function PokemonDetailContent({
   onExploreMoreStats,
 }: PokemonDetailContentProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const insets = useSafeAreaInsets();
   const [pokemon, setPokemon] = useState<PokemonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -222,7 +224,7 @@ export function PokemonDetailContent({
       </Animated.View>
 
       {/* Content Card */}
-      <View style={styles.contentCard}>
+      <View style={[styles.contentCard, { paddingBottom: insets.bottom + 32 }]}>
         {/* About Section */}
         <Animated.View
           entering={FadeInDown.duration(400)}
@@ -345,7 +347,7 @@ const styles = StyleSheet.create({
     borderCurve: "continuous",
     backgroundColor: colors.backgroundLight,
     paddingTop: 4,
-    paddingBottom: 100,
+    paddingBottom: 32,
   },
   heroTopRow: {
     flexDirection: "row",
