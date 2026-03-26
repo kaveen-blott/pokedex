@@ -4,6 +4,7 @@ import {
   getPokemonArtworkUrl,
   getPokemonId,
 } from "@/src/lib/pokeapi";
+import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
 import type { EvolutionChainLink, PokemonSpecies } from "@/src/types/pokemon";
 import { Image } from "expo-image";
@@ -18,22 +19,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-const POKEMON_NAME_MAP: Record<string, string> = {
-  "nidoran-f": "Nidoran♀",
-  "nidoran-m": "Nidoran♂",
-  "mr-mime": "Mr. Mime",
-  "deoxys-normal": "Deoxys",
-  farfetchd: "Farfetch'd",
-};
-
-function formatPokemonName(name: string): string {
-  if (POKEMON_NAME_MAP[name]) return POKEMON_NAME_MAP[name];
-  return name
-    .split("-")
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join(" ");
-}
 
 interface EvoStage {
   name: string;
@@ -322,12 +307,16 @@ export default function StatsModal() {
           <InfoPill
             label="Habitat"
             value={
-              species.habitat ? formatPokemonName(species.habitat.name) : "Unknown"
+              species.habitat
+                ? formatPokemonName(species.habitat.name)
+                : "Unknown"
             }
           />
           <InfoPill
             label="Egg Groups"
-            value={species.egg_groups.map((g) => formatPokemonName(g.name)).join(", ")}
+            value={species.egg_groups
+              .map((g) => formatPokemonName(g.name))
+              .join(", ")}
           />
         </View>
       </View>

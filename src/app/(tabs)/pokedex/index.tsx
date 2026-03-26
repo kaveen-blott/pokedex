@@ -1,5 +1,6 @@
 import { PokemonCard } from "@/src/components/PokemonCard";
 import { fetchPokemonList, PAGE_SIZE, TOTAL_POKEMON } from "@/src/lib/pokeapi";
+import { normalizePokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
 import type { Pokemon } from "@/src/types/pokemon";
 import { Ionicons } from "@expo/vector-icons";
@@ -45,9 +46,11 @@ export default function Pokedex() {
   }, [loadAll]);
 
   const filtered = useMemo(() => {
-    const query = debouncedSearch.trim().toLowerCase();
+    const query = normalizePokemonName(debouncedSearch);
     if (!query) return allPokemon;
-    return allPokemon.filter((p) => p.name.includes(query));
+    return allPokemon.filter((p) =>
+      normalizePokemonName(p.name).includes(query),
+    );
   }, [allPokemon, debouncedSearch]);
 
   const displayedPokemon = useMemo(
@@ -123,7 +126,12 @@ export default function Pokedex() {
             returnKeyType="search"
           />
           {search.length > 0 ? (
-            <Pressable onPress={clearSearch} hitSlop={8}>
+            <Pressable
+              onPress={clearSearch}
+              hitSlop={8}
+              accessibilityLabel="Clear search"
+              accessibilityRole="button"
+            >
               <Text style={styles.clearButton}>✕</Text>
             </Pressable>
           ) : null}

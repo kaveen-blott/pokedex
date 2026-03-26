@@ -1,9 +1,10 @@
+import { useFavorites } from "@/src/lib/favorites";
 import {
   fetchPokemonDetails,
   getPokemonArtworkUrl,
   TYPE_COLORS,
 } from "@/src/lib/pokeapi";
-import { useFavorites } from "@/src/lib/favorites";
+import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
 import type { PokemonDetails } from "@/src/types/pokemon";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,22 +30,6 @@ const STAT_LABELS: Record<string, string> = {
 };
 
 const STAT_MAX = 255;
-
-const POKEMON_NAME_MAP: Record<string, string> = {
-  "nidoran-f": "Nidoran♀",
-  "nidoran-m": "Nidoran♂",
-  "mr-mime": "Mr. Mime",
-  "deoxys-normal": "Deoxys",
-  farfetchd: "Farfetch'd",
-};
-
-function formatPokemonName(name: string): string {
-  if (POKEMON_NAME_MAP[name]) return POKEMON_NAME_MAP[name];
-  return name
-    .split("-")
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join(" ");
-}
 
 function formatHeight(dm: number): string {
   const m = dm / 10;
@@ -86,17 +71,22 @@ function StatBar({ label, value }: { label: string; value: number }) {
   );
 }
 
-const DARK_TEXT_TYPES = new Set([
-  "electric",
-  "ice",
-  "normal",
-  "fairy",
-  "ground",
-]);
+function hexToLuminance(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const toLinear = (c: number) =>
+    c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+function getContrastTextColor(bgHex: string): string {
+  return hexToLuminance(bgHex) > 0.4 ? "#2E2E2E" : "#FFFFFF";
+}
 
 function TypeBadge({ name }: { name: string }) {
   const bgColor = TYPE_COLORS[name] ?? colors.textMuted;
-  const textColor = DARK_TEXT_TYPES.has(name) ? "#2E2E2E" : "#FFFFFF";
+  const textColor = getContrastTextColor(bgColor);
 
   return (
     <View style={[typeStyles.badge, { backgroundColor: bgColor }]}>
@@ -124,7 +114,8 @@ export default function Details() {
   const [pokemon, setPokemon] = useState<PokemonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const favorited = isFavorite(id ?? "");
+  const canonicalId = pokemon ? String(pokemon.id) : (id ?? "");
+  const favorited = isFavorite(canonicalId);
 
   const loadDetails = useCallback(() => {
     if (!id) {
@@ -184,8 +175,19 @@ export default function Details() {
           </Text>
           <Pressable
             style={styles.favoriteButton}
-            onPress={() => toggleFavorite(String(pokemon.id))}
+            onPress={() => toggleFavorite(canonicalId)}
             hitSlop={12}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={
+              favorited ? "Remove from favorites" : "Add to favorites"
+            }
+            accessibilityState={{ selected: favorited }}
+            accessibilityHint={
+              favorited
+                ? "Removes this Pokémon from your favorites"
+                : "Adds this Pokémon to your favorites"
+            }
           >
             <Ionicons
               name={favorited ? "heart" : "heart-outline"}

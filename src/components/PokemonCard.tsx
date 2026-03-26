@@ -1,14 +1,11 @@
 import { useFavorites } from "@/src/lib/favorites";
 import { getPokemonId, getPokemonSpriteUrl } from "@/src/lib/pokeapi";
+import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
 
 export function PokemonCard({ name, url }: { name: string; url: string }) {
   const id = getPokemonId(url);
@@ -34,8 +31,13 @@ export function PokemonCard({ name, url }: { name: string; url: string }) {
             recyclingKey={id}
           />
         </View>
-        <View style={[styles.nameContainer, favorited && styles.nameContainerFavorite]}>
-          <Text style={styles.name}>{capitalize(name)}</Text>
+        <View
+          style={[
+            styles.nameContainer,
+            favorited && styles.nameContainerFavorite,
+          ]}
+        >
+          <Text style={styles.name}>{formatPokemonName(name)}</Text>
         </View>
       </Pressable>
     </Link>

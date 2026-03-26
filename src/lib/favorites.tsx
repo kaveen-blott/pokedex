@@ -24,17 +24,48 @@ const FavoritesContext = createContext<FavoritesContextType>({
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+  const hydrate = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        setFavorites(new Set(JSON.parse(raw) as string[]));
+        const parsed = JSON.parse(raw);
+        if (
+          Array.isArray(parsed) &&
+          parsed.every((v) => typeof v === "string")
+        ) {
+          setFavorites((prev) => {
+            const merged = new Set(prev);
+            parsed.forEach((id: string) => merged.add(id));
+            return merged;
+          });
+        } else {
+          await AsyncStorage.removeItem(STORAGE_KEY);
+        }
       }
-    });
+    } catch {
+      setFavorites(new Set());
+      try {
+        await AsyncStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // ignore cleanup failure
+      }
+    } finally {
+      setHydrated(true);
+    }
   }, []);
 
-  const persist = useCallback((next: Set<string>) => {
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  const persist = useCallback(async (next: Set<string>) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+    } catch (e) {
+      console.warn("Failed to persist favorites:", e);
+    }
   }, []);
 
   const isFavorite = useCallback(
@@ -58,8 +89,12 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  if (!hydrated) return null;
+
   return (
-    <FavoritesContext.Provider value={{ favorites, isFavorite, toggleFavorite }}>
+    <FavoritesContext.Provider
+      value={{ favorites, isFavorite, toggleFavorite }}
+    >
       {children}
     </FavoritesContext.Provider>
   );
