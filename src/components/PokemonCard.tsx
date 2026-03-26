@@ -16,9 +16,6 @@ export function PokemonCard({ name, url }: { name: string; url: string }) {
     <Link href={{ pathname: "/(tabs)/pokedex/[id]", params: { id } }} asChild>
       <Pressable style={styles.card}>
         <View style={styles.idBadge}>
-          {favorited ? (
-            <Ionicons name="heart" size={14} color={colors.red} />
-          ) : null}
           <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
         </View>
         <View style={styles.spriteContainer}>
@@ -37,6 +34,7 @@ export function PokemonCard({ name, url }: { name: string; url: string }) {
             favorited && styles.nameContainerFavorite,
           ]}
         >
+          {favorited ? <Ionicons name="star" size={14} color="#fff" /> : null}
           <Text style={styles.name}>{formatPokemonName(name)}</Text>
         </View>
       </Pressable>
@@ -78,12 +76,15 @@ const styles = StyleSheet.create({
     height: 80,
   },
   nameContainer: {
+    flexDirection: "row",
     backgroundColor: colors.red,
     paddingVertical: 10,
     alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
   nameContainerFavorite: {
-    backgroundColor: colors.redDark,
+    backgroundColor: colors.favorite,
   },
   name: {
     fontSize: 13,

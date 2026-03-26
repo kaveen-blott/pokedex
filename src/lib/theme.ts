@@ -12,6 +12,11 @@ export const colors = {
   textSecondary: "#6B6B80",
   textMuted: "#A0A0B0",
 
+  // Favorites
+  favorite: "#F5A623",
+  favoriteBg: "#FFF8EC",
+  favoriteBorder: "#F5A623",
+
   // Accents
   border: "#E8E8EF",
   shadow: "rgba(0, 0, 0, 0.1)",
