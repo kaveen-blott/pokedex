@@ -1,15 +1,9 @@
 import { GenderBar } from "@/src/components/GenderBar";
 import { InfoPill } from "@/src/components/InfoPill";
-import {
-  EvolutionRow,
-  flattenEvolutionChain,
-} from "@/src/components/pokemon";
 import type { EvoStage } from "@/src/components/pokemon";
+import { EvolutionRow, flattenEvolutionChain } from "@/src/components/pokemon";
 import { StatMeter } from "@/src/components/StatMeter";
-import {
-  fetchEvolutionChain,
-  fetchPokemonSpecies,
-} from "@/src/lib/pokeapi";
+import { fetchEvolutionChain, fetchPokemonSpecies } from "@/src/lib/pokeapi";
 import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
 import type { PokemonSpecies } from "@/src/types/pokemon";
@@ -190,10 +184,12 @@ export default function StatsModal() {
               currentId={id ?? ""}
               onPokemonPress={(evoId) => {
                 router.dismiss();
-                router.push({
-                  pathname: "/(tabs)/pokedex/[id]",
-                  params: { id: evoId },
-                });
+                setTimeout(() => {
+                  router.navigate({
+                    pathname: "/(tabs)/pokedex/[id]",
+                    params: { id: evoId },
+                  });
+                }, 100);
               }}
             />
           </View>
