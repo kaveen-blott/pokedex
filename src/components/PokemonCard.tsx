@@ -10,40 +10,53 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 type PokemonCardProps = {
   name: string;
   onLongPress?: () => void;
+  onPress?: () => void;
 } & ({ url: string; id?: never } | { id: string; url?: never });
 
 export function PokemonCard(props: PokemonCardProps) {
   const id = props.id ?? getPokemonId(props.url!);
-  const { name, onLongPress } = props;
+  const { name, onLongPress, onPress } = props;
   const { isFavorite } = useFavorites();
   const favorited = isFavorite(id);
 
+  const cardContent = (
+    <Pressable
+      style={styles.card}
+      onLongPress={onLongPress}
+      onPress={onPress}
+    >
+      <View style={styles.idBadge}>
+        <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
+      </View>
+      <View style={styles.spriteContainer}>
+        <Image
+          source={{ uri: getPokemonSpriteUrl(id) }}
+          style={styles.sprite}
+          contentFit="contain"
+          transition={200}
+          cachePolicy="memory-disk"
+          recyclingKey={id}
+        />
+      </View>
+      <View
+        style={[
+          styles.nameContainer,
+          favorited && styles.nameContainerFavorite,
+        ]}
+      >
+        {favorited ? <Ionicons name="star" size={14} color="#fff" /> : null}
+        <Text style={styles.name}>{formatPokemonName(name)}</Text>
+      </View>
+    </Pressable>
+  );
+
+  if (onPress) {
+    return cardContent;
+  }
+
   return (
     <Link href={{ pathname: "/(tabs)/pokedex/[id]", params: { id } }} asChild>
-      <Pressable style={styles.card} onLongPress={onLongPress}>
-        <View style={styles.idBadge}>
-          <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
-        </View>
-        <View style={styles.spriteContainer}>
-          <Image
-            source={{ uri: getPokemonSpriteUrl(id) }}
-            style={styles.sprite}
-            contentFit="contain"
-            transition={200}
-            cachePolicy="memory-disk"
-            recyclingKey={id}
-          />
-        </View>
-        <View
-          style={[
-            styles.nameContainer,
-            favorited && styles.nameContainerFavorite,
-          ]}
-        >
-          {favorited ? <Ionicons name="star" size={14} color="#fff" /> : null}
-          <Text style={styles.name}>{formatPokemonName(name)}</Text>
-        </View>
-      </Pressable>
+      {cardContent}
     </Link>
   );
 }

@@ -4,6 +4,7 @@ import { fetchPokemonList, TOTAL_POKEMON } from "@/src/lib/pokeapi";
 import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -18,6 +19,7 @@ type NameMap = Record<string, string>;
 
 export default function Favorites() {
   const { favorites, toggleFavorite } = useFavorites();
+  const router = useRouter();
   const [nameMap, setNameMap] = useState<NameMap>({});
   const [loading, setLoading] = useState(true);
 
@@ -90,6 +92,12 @@ export default function Favorites() {
             id={id}
             name={nameMap[id] ?? `Pokemon ${id}`}
             onLongPress={() => handleLongPress(id, nameMap[id] ?? id)}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/favorites/[id]",
+                params: { id },
+              })
+            }
           />
         </View>
       )}

@@ -1,18 +1,10 @@
 import { PokemonDetailContent } from "@/src/components/pokemon";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback } from "react";
 
-export default function Details() {
+export default function FavoriteDetailModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const navigation = useNavigation();
-
-  const handleTitleResolved = useCallback(
-    (title: string) => {
-      navigation.setOptions({ title });
-    },
-    [navigation],
-  );
 
   const handleExploreMoreStats = useCallback(
     (pokemonId: string) => {
@@ -27,7 +19,6 @@ export default function Details() {
   return (
     <PokemonDetailContent
       id={id ?? ""}
-      onTitleResolved={handleTitleResolved}
       onExploreMoreStats={handleExploreMoreStats}
     />
   );

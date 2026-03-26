@@ -43,7 +43,6 @@ export async function fetchPokemonDetails(id: string): Promise<PokemonDetails> {
   if (!res.ok) {
     throw new Error(`PokéAPI error: ${res.status} ${res.statusText}`);
   }
-  await new Promise((resolve) => setTimeout(resolve, 3000)); // Simulate network delay
   return res.json();
 }
 
