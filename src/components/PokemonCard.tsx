@@ -1,20 +1,24 @@
+import { useFavorites } from "@/src/lib/favorites";
 import { getPokemonId, getPokemonSpriteUrl } from "@/src/lib/pokeapi";
+import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
 export function PokemonCard({ name, url }: { name: string; url: string }) {
   const id = getPokemonId(url);
+  const { isFavorite } = useFavorites();
+  const favorited = isFavorite(id);
 
   return (
     <Link href={{ pathname: "/(tabs)/pokedex/[id]", params: { id } }} asChild>
       <Pressable style={styles.card}>
         <View style={styles.idBadge}>
+          {favorited ? (
+            <Ionicons name="heart" size={14} color={colors.red} />
+          ) : null}
           <Text style={styles.idText}>#{id.padStart(3, "0")}</Text>
         </View>
         <View style={styles.spriteContainer}>
@@ -27,8 +31,13 @@ export function PokemonCard({ name, url }: { name: string; url: string }) {
             recyclingKey={id}
           />
         </View>
-        <View style={styles.nameContainer}>
-          <Text style={styles.name}>{capitalize(name)}</Text>
+        <View
+          style={[
+            styles.nameContainer,
+            favorited && styles.nameContainerFavorite,
+          ]}
+        >
+          <Text style={styles.name}>{formatPokemonName(name)}</Text>
         </View>
       </Pressable>
     </Link>
@@ -45,7 +54,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   idBadge: {
+    flexDirection: "row",
     alignSelf: "flex-end",
+    alignItems: "center",
+    gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 4,
     marginTop: 8,
@@ -69,6 +81,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.red,
     paddingVertical: 10,
     alignItems: "center",
+  },
+  nameContainerFavorite: {
+    backgroundColor: colors.redDark,
   },
   name: {
     fontSize: 13,

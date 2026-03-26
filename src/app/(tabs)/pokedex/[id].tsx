@@ -1,10 +1,13 @@
+import { useFavorites } from "@/src/lib/favorites";
 import {
   fetchPokemonDetails,
   getPokemonArtworkUrl,
   TYPE_COLORS,
 } from "@/src/lib/pokeapi";
+import { formatPokemonName } from "@/src/lib/pokemon-name";
 import { colors } from "@/src/lib/theme";
 import type { PokemonDetails } from "@/src/types/pokemon";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -27,13 +30,6 @@ const STAT_LABELS: Record<string, string> = {
 };
 
 const STAT_MAX = 255;
-
-function capitalize(str: string): string {
-  return str
-    .split("-")
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join(" ");
-}
 
 function formatHeight(dm: number): string {
   const m = dm / 10;
@@ -75,12 +71,28 @@ function StatBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+function hexToLuminance(hex: string): number {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const toLinear = (c: number) =>
+    c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+function getContrastTextColor(bgHex: string): string {
+  return hexToLuminance(bgHex) > 0.4 ? "#2E2E2E" : "#FFFFFF";
+}
+
 function TypeBadge({ name }: { name: string }) {
   const bgColor = TYPE_COLORS[name] ?? colors.textMuted;
+  const textColor = getContrastTextColor(bgColor);
 
   return (
     <View style={[typeStyles.badge, { backgroundColor: bgColor }]}>
-      <Text style={typeStyles.text}>{capitalize(name)}</Text>
+      <Text style={[typeStyles.text, { color: textColor }]}>
+        {formatPokemonName(name)}
+      </Text>
     </View>
   );
 }
@@ -98,18 +110,25 @@ export default function Details() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const navigation = useNavigation();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [pokemon, setPokemon] = useState<PokemonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const canonicalId = pokemon ? String(pokemon.id) : (id ?? "");
+  const favorited = isFavorite(canonicalId);
 
   const loadDetails = useCallback(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      setError("Invalid Pokémon id.");
+      return;
+    }
     setLoading(true);
     setError(null);
     fetchPokemonDetails(id)
       .then((data) => {
         setPokemon(data);
-        navigation.setOptions({ title: capitalize(data.name) });
+        navigation.setOptions({ title: formatPokemonName(data.name) });
       })
       .catch(() => setError("Failed to load Pokémon details."))
       .finally(() => setLoading(false));
@@ -150,9 +169,33 @@ export default function Details() {
     >
       {/* Hero Section */}
       <View style={[styles.hero, { backgroundColor: heroBg }]}>
-        <Text style={styles.heroId}>
-          #{String(pokemon.id).padStart(3, "0")}
-        </Text>
+        <View style={styles.heroTopRow}>
+          <Text style={styles.heroId}>
+            #{String(pokemon.id).padStart(3, "0")}
+          </Text>
+          <Pressable
+            style={styles.favoriteButton}
+            onPress={() => toggleFavorite(canonicalId)}
+            hitSlop={12}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={
+              favorited ? "Remove from favorites" : "Add to favorites"
+            }
+            accessibilityState={{ selected: favorited }}
+            accessibilityHint={
+              favorited
+                ? "Removes this Pokémon from your favorites"
+                : "Adds this Pokémon to your favorites"
+            }
+          >
+            <Ionicons
+              name={favorited ? "heart" : "heart-outline"}
+              size={26}
+              color="#fff"
+            />
+          </Pressable>
+        </View>
         <Image
           source={{ uri: getPokemonArtworkUrl(String(pokemon.id)) }}
           style={styles.heroSprite}
@@ -160,7 +203,7 @@ export default function Details() {
           transition={300}
           cachePolicy="memory-disk"
         />
-        <Text style={styles.heroName}>{capitalize(pokemon.name)}</Text>
+        <Text style={styles.heroName}>{formatPokemonName(pokemon.name)}</Text>
         <View style={styles.typesRow}>
           {pokemon.types.map((t) => (
             <TypeBadge key={t.type.name} name={t.type.name} />
@@ -187,7 +230,7 @@ export default function Details() {
           {pokemon.abilities.map((a) => (
             <View key={a.ability.name} style={styles.abilityChip}>
               <Text style={styles.abilityText}>
-                {capitalize(a.ability.name)}
+                {formatPokemonName(a.ability.name)}
               </Text>
               {a.is_hidden ? (
                 <Text style={styles.hiddenLabel}>Hidden</Text>
@@ -274,11 +317,26 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 32,
     borderCurve: "continuous",
   },
+  heroTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 20,
+  },
   heroId: {
     fontSize: 14,
     fontWeight: "800",
     color: "rgba(255, 255, 255, 0.6)",
     letterSpacing: 1,
+  },
+  favoriteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroSprite: {
     width: 180,

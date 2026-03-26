@@ -21,7 +21,7 @@ export function getPokemonArtworkUrl(id: string): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 }
 
-export const PAGE_SIZE = 30;
+export const PAGE_SIZE = 50;
 export const TOTAL_POKEMON = 151;
 
 export async function fetchPokemonList(
